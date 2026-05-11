@@ -6,8 +6,8 @@ export const Quest1_Profile = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div className="border-l-[6px] border-[#E74C3C] pl-6 py-2">
-          <p className="text-3xl sm:text-5xl font-black text-black leading-none">Muhammad Yafi Azka</p>
-          <p className="text-xl sm:text-2xl font-bold text-black/50 mt-2">Fullstack Developer</p>
+          <h1 className="text-3xl sm:text-5xl font-black text-black leading-none">Muhammad Yafi Azka</h1>
+          <h2 className="text-xl sm:text-2xl font-bold text-black/50 mt-2">Fullstack Developer & UI Specialist</h2>
         </div>
         <div className="bg-black/5 p-4 border-2 border-black/10 rounded-sm text-sm font-bold w-full sm:w-auto">
           <p className="flex justify-between gap-8"><span>LOCATION:</span> <span>Banda Aceh, ID</span></p>

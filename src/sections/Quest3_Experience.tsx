@@ -37,7 +37,7 @@ export const Quest3_Experience = () => {
               <h3 className="text-xl sm:text-2xl font-black uppercase leading-none">{exp.company}</h3>
               <span className="text-xs font-black text-black/40 uppercase bg-black/5 px-2 py-1">{exp.period}</span>
             </div>
-            <p className="text-lg font-black uppercase text-[#2ECC71] mb-2">{exp.role}</p>
+            <h4 className="text-lg font-black uppercase text-[#2ECC71] mb-2">{exp.role}</h4>
             <p className="text-base sm:text-lg font-medium text-black/70 leading-snug">{exp.desc}</p>
           </div>
         </div>
