@@ -330,8 +330,8 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(false);
   const scrollDirection = useRef(0);
   const scrollSpeed = useRef(0);
-  const maxScrollSpeed = 0.008;
-  const scrollAccel = 0.0002;
+  const maxScrollSpeed = 0.007; // Optimized for readability
+  const scrollAccel = 0.0001; // Softer acceleration curve
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -546,7 +546,7 @@ export default function App() {
         </div>
 
         {/* Character */}
-        <div id="player-character-container" className="absolute left-1/2 bottom-[160px] -translate-x-1/2 z-[100] pointer-events-none">
+        <div id="player-character-container" className="absolute left-1/2 bottom-[120px] sm:bottom-[150px] -translate-x-1/2 z-[100] pointer-events-none">
           <Character isMoving={isMoving} velocity={velocity} isJumping={isJumping} direction={direction} recoil={recoil} />
         </div>
 
@@ -581,8 +581,8 @@ export default function App() {
               onPointerLeave={stopScrolling}
               className="group relative w-14 h-14 sm:w-20 sm:h-20 bg-[#E74C3C] border-4 border-black shadow-[4px_4px_0px_0px_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] rounded-full font-black text-xl sm:text-2xl flex items-center justify-center hover:translate-y-1 transition-all touch-none"
             >
-              <span className="absolute -top-10 text-[10px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black px-2 py-1 rounded text-white border border-white/20 whitespace-nowrap shadow-xl pointer-events-none">
-                {isMobile ? "PREV QUEST" : "GO LEFT"}
+              <span className="absolute -top-10 text-[10px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black px-2 py-1 rounded text-white border border-white/20 whitespace-nowrap shadow-xl pointer-events-none uppercase tracking-tighter font-black">
+                GO LEFT
               </span>
               A
             </button>
@@ -592,8 +592,8 @@ export default function App() {
               onPointerLeave={stopScrolling}
               className="group relative w-14 h-14 sm:w-20 sm:h-20 bg-[#E74C3C] border-4 border-black shadow-[4px_4px_0px_0px_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] rounded-full font-black text-xl sm:text-2xl flex items-center justify-center hover:translate-y-1 transition-all touch-none"
             >
-              <span className="absolute -top-10 text-[10px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black px-2 py-1 rounded text-white border border-white/20 whitespace-nowrap shadow-xl pointer-events-none">
-                {isMobile ? "NEXT QUEST" : "GO RIGHT"}
+              <span className="absolute -top-10 text-[10px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black px-2 py-1 rounded text-white border border-white/20 whitespace-nowrap shadow-xl pointer-events-none uppercase tracking-tighter font-black">
+                GO RIGHT
               </span>
               B
             </button>
