@@ -16,6 +16,12 @@ import { Quest6_Contact } from "./sections/Quest6_Contact";
 const Character = ({ isMoving, velocity, isJumping: manualJumping, direction, recoil }: { isMoving: boolean; velocity: number; isJumping: boolean; direction: number; recoil: boolean }) => {
   const isJumping = manualJumping;
   const [lookDir, setLookDir] = useState(0);
+  const [isIdle, setIsIdle] = useState(true);
+
+  useEffect(() => {
+    const idleTimer = setTimeout(() => setIsIdle(!isMoving && !isJumping), 100);
+    return () => clearTimeout(idleTimer);
+  }, [isMoving, isJumping]);
 
   useEffect(() => {
     if (isMoving || isJumping) {
@@ -36,14 +42,14 @@ const Character = ({ isMoving, velocity, isJumping: manualJumping, direction, re
       <motion.div
         className="w-full h-full"
         animate={{
-          y: isJumping ? [0, -120, 0] : isMoving ? [0, -15, 0] : [0, -2, 0],
-          rotate: isMoving ? [0, 8, -8, 0] : 0,
+          y: isJumping ? [0, -120, 0] : isMoving ? [0, -8, 0] : [0, -4, 0],
+          rotate: isMoving ? [0, 5, -5, 0] : isIdle ? [0, 1, -1, 0] : 0,
           scaleX: recoil ? [direction, direction * 1.1, direction] : direction,
-          scaleY: recoil ? [1, 0.8, 1.1, 1] : (isJumping ? [1, 1.3, 0.7, 1] : isMoving ? [1, 0.9, 1.1, 1] : [1, 1.02, 1]),
+          scaleY: recoil ? [1, 0.8, 1.1, 1] : (isJumping ? [1, 1.3, 0.7, 1] : isMoving ? [1, 0.95, 1.05, 1] : [1, 1.05, 1]),
         }}
         transition={{
           y: {
-            duration: isJumping ? 0.6 : isMoving ? 0.25 : 2.5,
+            duration: isJumping ? 0.6 : isMoving ? 0.25 : 3,
             repeat: isJumping ? 0 : Infinity,
             ease: "easeInOut",
           },
@@ -54,8 +60,8 @@ const Character = ({ isMoving, velocity, isJumping: manualJumping, direction, re
           },
           scaleX: recoil ? { duration: 0.3 } : { type: "spring", stiffness: 400, damping: 15 },
           rotate: {
-             duration: 0.25,
-             repeat: isMoving ? Infinity : 0
+             duration: isMoving ? 0.25 : 2,
+             repeat: Infinity
           },
         }}
       >
@@ -165,6 +171,14 @@ const Bush = ({ x, scale = 1 }: { x: string; scale?: number }) => (
   </div>
 );
 
+const Grass = ({ x, scale = 1 }: { x: string; scale?: number }) => (
+  <div className="absolute bottom-0 flex gap-0.5" style={{ left: x, transform: `scale(${scale})`, transformOrigin: 'bottom' }}>
+    <div className="w-2 h-6 bg-[#71BC2B] border-t-4 border-x-4 border-black" style={{ clipPath: 'polygon(0% 100%, 50% 0%, 100% 100%)' }} />
+    <div className="w-2 h-8 bg-[#71BC2B] border-t-4 border-x-4 border-black" style={{ clipPath: 'polygon(0% 100%, 50% 0%, 100% 100%)' }} />
+    <div className="w-2 h-5 bg-[#71BC2B] border-t-4 border-x-4 border-black" style={{ clipPath: 'polygon(0% 100%, 50% 0%, 100% 100%)' }} />
+  </div>
+);
+
 const LevelSection: React.FC<{ section: Section; index: number }> = ({ section, index }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -219,7 +233,7 @@ const LevelSection: React.FC<{ section: Section; index: number }> = ({ section, 
                drag="y"
                dragConstraints={{ top: dragLimit, bottom: 0 }}
                dragElastic={0.1}
-               dragMomentum={false}
+               dragMomentum={true}
                className="text-black w-full"
              >
                <div ref={contentRef} className="pb-12">
@@ -314,6 +328,10 @@ export default function App() {
   const [isJumping, setIsJumping] = useState(false);
   const [recoil, setRecoil] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const scrollDirection = useRef(0);
+  const scrollSpeed = useRef(0);
+  const maxScrollSpeed = 0.008;
+  const scrollAccel = 0.0002;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -321,6 +339,35 @@ export default function App() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useAnimationFrame((time, delta) => {
+    if (scrollDirection.current !== 0) {
+      // Smooth Ramp up speed
+      scrollSpeed.current = Math.min(maxScrollSpeed, scrollSpeed.current + scrollAccel);
+      const next = Math.max(0, Math.min(1, progress.get() + (scrollDirection.current * scrollSpeed.current)));
+      progress.set(next);
+    } else {
+      // Smooth deceleration
+      if (scrollSpeed.current > 0) {
+        scrollSpeed.current = Math.max(0, scrollSpeed.current - (scrollAccel * 2));
+        const next = Math.max(0, Math.min(1, progress.get() + (lastDir.current * scrollSpeed.current)));
+        progress.set(next);
+      }
+    }
+  });
+
+  const lastDir = useRef(0);
+
+  const startScrolling = (dir: number) => {
+    scrollDirection.current = dir;
+    lastDir.current = dir;
+    handleJump();
+    triggerRecoil();
+  };
+
+  const stopScrolling = () => {
+    scrollDirection.current = 0;
+  };
 
   const triggerRecoil = () => {
     setRecoil(true);
@@ -331,8 +378,8 @@ export default function App() {
   const progress = useMotionValue(0);
   
   const smoothProgress = useSpring(progress, {
-    stiffness: 40,
-    damping: 15,
+    stiffness: 60, // Increased for snappier feel
+    damping: 20,
     restDelta: 0.0001
   });
 
@@ -370,29 +417,65 @@ export default function App() {
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      const delta = (e.deltaY + e.deltaX) / 1500; // Increased sensitivity (reduced divisor)
+      const delta = (e.deltaY + e.deltaX) / 1000; 
       const nextProgress = Math.max(0, Math.min(1, progress.get() + delta));
       progress.set(nextProgress);
-      if (Math.abs(delta) > 0.001 && Math.random() > 0.99) triggerRecoil();
     };
 
-    // Add touch support
-    let touchX = 0;
-    const handleTouchStart = (e: TouchEvent) => { touchX = e.touches[0].clientX; };
+    // Advanced Touch Support with Inertia
+    let lastTouchX = 0;
+    let touchVelocity = 0;
+    let rafId: number;
+    let isTouching = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      isTouching = true;
+      lastTouchX = e.touches[0].clientX;
+      touchVelocity = 0;
+      cancelAnimationFrame(rafId);
+    };
+
     const handleTouchMove = (e: TouchEvent) => {
-      const deltaX = touchX - e.touches[0].clientX;
-      const delta = deltaX / 2000;
-      progress.set(Math.max(0, Math.min(1, progress.get() + delta)));
-      touchX = e.touches[0].clientX;
+      if (!isTouching) return;
+      const currentX = e.touches[0].clientX;
+      const deltaX = lastTouchX - currentX;
+      // Scale delta relative to screen size - increased sensitivity
+      const delta = deltaX / (window.innerWidth * 0.8);
+      
+      const currentProgress = progress.get();
+      progress.set(Math.max(0, Math.min(1, currentProgress + delta)));
+      
+      touchVelocity = delta;
+      lastTouchX = currentX;
+    };
+
+    const handleTouchEnd = () => {
+      isTouching = false;
+      
+      const applyInertia = () => {
+        if (Math.abs(touchVelocity) < 0.00005 || isTouching) return;
+        
+        const currentProgress = progress.get();
+        progress.set(Math.max(0, Math.min(1, currentProgress + touchVelocity)));
+        
+        touchVelocity *= 0.92; // Slightly more friction for control
+        rafId = requestAnimationFrame(applyInertia);
+      };
+      
+      rafId = requestAnimationFrame(applyInertia);
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+    
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -405,6 +488,13 @@ export default function App() {
     w: 60 + Math.random() * 100,
     h: 20 + Math.random() * 40
   })));
+
+  const scrollByStep = (direction: number) => {
+    const current = progress.get();
+    const step = 1 / (SECTIONS.length - 1);
+    const next = Math.max(0, Math.min(1, Math.round(current / step + direction) * step));
+    progress.set(next);
+  };
 
   return (
     <div className="bg-[#5C94FC] text-white overflow-hidden font-sans cursor-crosshair scrollbar-hide h-screen w-screen relative">
@@ -445,6 +535,10 @@ export default function App() {
             <Bush x="5%" /><Bush x="20%" scale={1.2} /><Bush x="40%" /><Bush x="55%" scale={0.8} />
             <Bush x="85%" scale={1.1} /><Bush x="110%" /><Bush x="140%" scale={0.9} />
             <Bush x="180%" scale={1.2} /><Bush x="220%" /><Bush x="260%" scale={0.8} />
+            <Grass x="2%" scale={1.3} /><Grass x="12%" /><Grass x="18%" scale={1.2} /><Grass x="25%" scale={0.9} />
+            <Grass x="32%" /><Grass x="42%" scale={1.1} /><Grass x="48%" scale={0.8} /><Grass x="60%" scale={1.2} />
+            <Grass x="75%" scale={1.4} /><Grass x="95%" /><Grass x="105%" scale={0.8} /><Grass x="125%" scale={1.1} />
+            <Grass x="150%" scale={0.9} /><Grass x="160%" scale={1.3} /><Grass x="190%" scale={1.1} /><Grass x="210%" /><Grass x="235%" scale={1.2} /><Grass x="250%" scale={0.9} />
           </ParallaxLayer>
           <ParallaxLayer progress={smoothProgress} speed={0.8} className="opacity-60">
              {stars.current.slice(15, 30).map(star => <FloatingStar key={star.id} {...star} />)}
@@ -468,34 +562,49 @@ export default function App() {
         </motion.div>
 
         {/* Ground */}
-        <div className="absolute bottom-0 w-full h-32 sm:h-40 z-40">
-          <div className="h-4 w-full bg-[#71BC2B] border-y-4 border-black"></div>
-          <div className="h-full w-full bg-[#9B7653] relative font-black uppercase text-black/10 flex items-center justify-center text-8xl"></div>
+        <div className="absolute bottom-0 w-full h-32 sm:h-40 z-40 bg-[#8b623e] border-t-4 border-black shadow-[inset_0_10px_20px_rgba(0,0,0,0.2)]">
+          <div className="h-4 w-full bg-[#71BC2B] border-b-4 border-black" />
+          <div className="h-full w-full relative pointer-events-none overflow-hidden opacity-20">
+             {/* Subterranean details */}
+             <div className="absolute top-8 left-1/4 w-12 h-6 bg-black/40 rounded-full blur-[2px]" />
+             <div className="absolute top-16 left-3/4 w-16 h-8 bg-black/40 rounded-full blur-[2px]" />
+             <div className="absolute bottom-12 left-1/2 w-8 h-4 bg-black/40 rounded-full blur-[1px]" />
+          </div>
         </div>
 
         {/* Controls Overlay */}
-        <div className="absolute bottom-6 sm:bottom-12 right-6 sm:right-12 flex items-center space-x-4 sm:space-x-6 z-50">
-          <div className="flex space-x-4">
+        <div className="absolute bottom-4 sm:bottom-12 right-4 sm:right-12 flex items-center space-x-3 sm:space-x-6 z-50">
+          <div className="flex space-x-3 sm:space-x-4">
             <button 
-              onClick={() => { handleJump(); triggerRecoil(); }}
-              className="w-16 h-16 sm:w-20 sm:h-20 bg-[#E74C3C] border-4 border-black shadow-[4px_4px_0px_0px_#000] rounded-full font-black text-xl sm:text-2xl flex items-center justify-center hover:translate-y-1 active:shadow-none transition-all"
+              onPointerDown={() => startScrolling(-1)}
+              onPointerUp={stopScrolling}
+              onPointerLeave={stopScrolling}
+              className="group relative w-14 h-14 sm:w-20 sm:h-20 bg-[#E74C3C] border-4 border-black shadow-[4px_4px_0px_0px_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] rounded-full font-black text-xl sm:text-2xl flex items-center justify-center hover:translate-y-1 transition-all touch-none"
             >
+              <span className="absolute -top-10 text-[10px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black px-2 py-1 rounded text-white border border-white/20 whitespace-nowrap shadow-xl pointer-events-none">
+                {isMobile ? "PREV QUEST" : "GO LEFT"}
+              </span>
               A
             </button>
             <button 
-              onClick={() => { handleJump(); triggerRecoil(); }}
-              className="w-16 h-16 sm:w-20 sm:h-20 bg-[#E74C3C] border-4 border-black shadow-[4px_4px_0px_0px_#000] rounded-full font-black text-xl sm:text-2xl flex items-center justify-center hover:translate-y-1 active:shadow-none transition-all"
+              onPointerDown={() => startScrolling(1)}
+              onPointerUp={stopScrolling}
+              onPointerLeave={stopScrolling}
+              className="group relative w-14 h-14 sm:w-20 sm:h-20 bg-[#E74C3C] border-4 border-black shadow-[4px_4px_0px_0px_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] rounded-full font-black text-xl sm:text-2xl flex items-center justify-center hover:translate-y-1 transition-all touch-none"
             >
+              <span className="absolute -top-10 text-[10px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black px-2 py-1 rounded text-white border border-white/20 whitespace-nowrap shadow-xl pointer-events-none">
+                {isMobile ? "NEXT QUEST" : "GO RIGHT"}
+              </span>
               B
             </button>
           </div>
         </div>
 
         {/* Progress HUD */}
-        <div className="absolute bottom-6 sm:bottom-12 left-6 sm:left-12 flex flex-col gap-2 z-50">
-          <span className="text-[10px] text-[#FFD700] font-black uppercase">Level Progress</span>
-          <div className="w-40 sm:w-64 h-5 sm:h-6 border-4 border-black bg-white p-1">
-            <motion.div className="h-full bg-[#E74C3C]" style={{ scaleX: smoothProgress, transformOrigin: "0%" }} />
+        <div className="absolute bottom-4 sm:bottom-12 left-4 sm:left-12 flex flex-col gap-1 sm:gap-2 z-50">
+          <span className="text-[9px] sm:text-[10px] text-[#FFD700] font-black uppercase drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">Quest Progress</span>
+          <div className="w-32 sm:w-64 h-4 sm:h-6 border-4 border-black bg-white/30 backdrop-blur-sm p-1">
+            <motion.div className="h-full bg-gradient-to-r from-[#E74C3C] to-[#C0392B]" style={{ scaleX: smoothProgress, transformOrigin: "0%" }} />
           </div>
         </div>
       </div>
