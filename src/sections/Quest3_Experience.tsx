@@ -3,25 +3,32 @@ import React from "react";
 export const Quest3_Experience = () => {
   const experiences = [
     {
-      company: "PT. Digital Kreasi Muslim",
-      period: "Feb 2024 - Present",
-      role: "Fullstack Developer",
+      company: "Freelance",
+      period: "Feb 2026 - Present",
+      role: "Software Developer",
+      color: "#E74C3C",
+      desc: "Developing an integrated personnel management and regional intelligence information system for the Aceh Regional Police. Built a web-based administrative portal for officials and a web-based app for field personnel, featuring an Interactive Multi-Level Dashboard, 28+ Regional Intelligence Modules, and role-based granular access controls down to the village level with real-time tracking."
+    },
+    {
+      company: "PT. Visi Muda Karya",
+      period: "Sep 2022 - Present",
+      role: "Software Developer",
       color: "#2ECC71",
-      desc: "Developed Paperless Hospital EMR System with BSrE digital signatures and BPJS integration. Focusing on beautiful, intuitive UI for healthcare providers."
+      desc: "Developed a comprehensive Paperless Hospital EMR System that revolutionizes how hospitals manage patient data. Worked across the full stack with key highlights including integration with BSrE for digital signatures, BPJS integration for claim processing, and real-time medical data access flows."
     },
     {
       company: "PT. Leu Ritel Indonesia",
-      period: "Sep 2022 - Jan 2024",
-      role: "Fullstack Developer",
+      period: "Mar 2023 - Jan 2024",
+      role: "Software Developer",
       color: "#27AE60",
-      desc: "Built Leumart E-commerce (Flutter & Laravel) and internal data processing systems for business operations."
+      desc: "Built the Leumart E-commerce Platform, a cross-platform application using Flutter and Laravel serving modern and traditional markets in Indonesia. Also developed internal data processing systems for business operations."
     },
     {
-      company: "Kooling ID",
+      company: "Kooling.id Medan",
       period: "2020 - 2021",
       role: "Digital Marketing Volunteer",
       color: "#bdc3c7",
-      desc: "Managed social media and supported digital marketing campaigns, gaining content creation experience."
+      desc: "Managed social media accounts, supported digital marketing strategies, and created content campaigns to enhance digital presence."
     }
   ];
 
